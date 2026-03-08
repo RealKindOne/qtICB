@@ -1,0 +1,15 @@
+# Qt
+*.autosave
+*.pro.user
+*.qmake.stash
+Makefile
+Makefile.Debug
+Makefile.Release
+
+# Compiler
+*.o
+moc_*
+ui_mainwindow.h
+
+*.exe
+*.dll

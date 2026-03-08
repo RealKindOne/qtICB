@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  mainwindow.ui - Qt Designer form for MainWindow (GUI build only).
+
+  This file defines the bare skeleton of the main window.  Almost all runtime
+  structure - connection tabs, private-chat tabs, the "+" dummy tab - is built
+  entirely in C++ by MainWindow::addNewTab() and MainWindow::openPrivateChat().
+  The .ui file therefore contains only the top-level window and the single
+  QTabWidget that occupies its central area.
+
+  Widget hierarchy:
+    QMainWindow  (MainWindow)
+    └── QWidget  centralwidget
+        └── QVBoxLayout  verticalLayout
+            └── QTabWidget  tabWidget
+                  (tabs added at runtime - see mainwindow.cpp)
+
+  Designer vs. runtime:
+    - tabsClosable: true  -> each tab gets a close button; MainWindow::onTabCloseRequested()
+                            intercepts it and prevents closing the "+" tab or the last session tab.
+    - movable: true       -> users can drag tabs to reorder them (no special handling needed).
+    - Initial size 1040×600 is a design-time hint; the user can resize freely.
+-->
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+
+  <!-- Initial window geometry: 1040 × 600 px.
+       Qt Designer uses this to render the form; the actual window is
+       whatever size the OS or user sets at runtime. -->
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1040</width>
+    <height>600</height>
+   </rect>
+  </property>
+
+  <!-- Default title shown before any tab is selected.
+       Overwritten at runtime by MainWindow::setWindowTitle(). -->
+  <property name="windowTitle">
+   <string>qtICB</string>
+  </property>
+
+  <!-- Central widget - fills the entire window interior. -->
+  <widget class="QWidget" name="centralwidget">
+
+   <!-- Single-item vertical layout so tabWidget stretches to fill the window. -->
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+
+     <!-- tabWidget is the root of all session and private-chat tabs.
+          Runtime tabs are created by:
+            MainWindow::addNewTab()       - new ICB server connection
+            MainWindow::openPrivateChat() - per-nick private-chat tab
+          A permanent "+" tab at index count()-1 acts as a "new connection" button.
+          tabsClosable gives every tab a close (×) button, handled by
+          MainWindow::onTabCloseRequested(). -->
+     <widget class="QTabWidget" name="tabWidget">
+
+      <!-- Each tab shows a close button. MainWindow guards against closing
+           the "+" tab and the last remaining session tab. -->
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+
+      <!-- Allow the user to drag tabs into a preferred order. -->
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+
+      <!-- No tabs are defined here; all tabs are added programmatically. -->
+
+     </widget>
+    </item>
+   </layout>
+  </widget>
+
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
