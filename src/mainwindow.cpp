@@ -107,13 +107,27 @@ void MainWindow::addNewTab() {
     // isn't currently in the foreground.
     connect(newConn, &ConnectionWidget::messageActivity, this, &MainWindow::onTabMessageActivity);
 
-    // Incoming private message: ensure the PrivateChat tab exists.
-    // The actual message display is handled by PrivateChatLogic (which is
-    // already connected to ICBSession::personalMessageReceived), so we only
-    // need to guarantee the tab is present.
+    // Incoming private message: ensure the PrivateChat tab exists and display
+    // the message.  We must check existence *before* calling getOrCreatePrivateChat
+    // because PrivateChatLogic connects to personalMessageReceived during its
+    // construction — it therefore misses the very signal that caused this lambda
+    // to run.  For an existing tab the logic object is already connected and will
+    // have displayed the message itself; for a new tab we do it manually here.
     connect(newConn, &ConnectionWidget::privateMessageReceived, this,
-        [=](const QString& from, const QString&) {
-            getOrCreatePrivateChat(newConn->connection(), from);
+        [=](const QString& from, const QString& message) {
+            bool existed = false;
+            if (m_privateChats.contains(newConn->connection())) {
+                for (auto it = m_privateChats[newConn->connection()].begin();
+                     it != m_privateChats[newConn->connection()].end(); ++it) {
+                    if (it.key().compare(from, Qt::CaseInsensitive) == 0) {
+                        existed = true;
+                        break;
+                    }
+                }
+            }
+            PrivateChat* chat = getOrCreatePrivateChat(newConn->connection(), from);
+            if (!existed && chat)
+                chat->appendIncomingMessage(from, message);
         });
 
     // Outgoing private message: same - ensure the PrivateChat tab exists.

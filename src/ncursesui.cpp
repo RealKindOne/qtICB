@@ -360,14 +360,27 @@ void NcursesUI::onSessionSystemMessage(ICBSession* session, const QString& text)
     flush();
 }
 
-// An incoming personal message arrived for this session.  We only ensure the
-// private chat buffer exists here — PrivateChatLogic is already connected to
-// personalMessageReceived and will emit incomingMessage (→ onPrivateChatIncoming)
-// which actually appends the text.  Routing it here too would bypass the nick
-// check inside PrivateChatLogic and could display the message in the wrong buffer.
+// An incoming personal message arrived for this session.
+// We ensure the private chat buffer exists here.  If the buffer is newly
+// created its PrivateChatLogic missed the personalMessageReceived signal that
+// triggered this call (the connection didn't exist yet), so we append the
+// message directly.  For an already-existing buffer, PrivateChatLogic is
+// already connected and will emit incomingMessage → onPrivateChatIncoming,
+// so we do nothing extra — handling it here too would display it twice.
 void NcursesUI::onSessionPrivateMessage(ICBSession* session, const QString& from,
-                                        const QString& /*text*/) {
-    getOrCreatePrivateChat(session, from);
+                                        const QString& text) {
+    auto result = getOrCreatePrivateChat(session, from);
+    if (result.created) {
+        // Manually replicate what onPrivateChatIncoming would do, since
+        // PrivateChatLogic wasn't connected when the signal fired.
+        QString timestamped = "[" + currentTimestamp() + "] <" + from + "> " + text;
+        appendToBuffer(result.chat, timestamped);
+        if (m_currentBuffer != result.chat) {
+            bufferData(result.chat).unread = true;
+            m_infoDirty = true;
+        }
+        flush();
+    }
 }
 
 // ICBSession parsed a "Group: name (flags) Topic: ..." line from /who output,
