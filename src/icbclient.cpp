@@ -170,8 +170,8 @@ void ICBClient::sendRawPacket(const QByteArray& packet) {
     if (m_socket->state() == QAbstractSocket::ConnectedState) {
         m_socket->write(packet);
 #ifdef QT_DEBUG
-        qDebug() << "Sent packet hex:"   << packet.toHex();
-        qDebug() << "Sent packet ascii:" << packet;
+        qDebug() << "SENT - RAW DATA HEX  :" << packet.toHex();
+        qDebug() << "SENT - RAW DATA ASCII:" << packet;
 #endif
     }
 }
@@ -366,8 +366,8 @@ void ICBClient::onReadyRead() {
     QByteArray newData = m_socket->readAll();
 #ifdef QT_DEBUG
     // Keep spacing in HEX for formatting
-    qDebug() << "RAW DATA HEX  :" << newData.toHex();
-    qDebug() << "RAW DATA ASCII:" << newData;
+    qDebug() << "RECV - RAW DATA HEX  :" << newData.toHex();
+    qDebug() << "RECV - RAW DATA ASCII:" << newData;
 #endif
 
     m_buffer.append(newData);
